@@ -11,6 +11,39 @@ const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-
 let userMessage = "";
 const chatHistory = [];
 
+// Function to check if the message is asking about Celestia's identity or status
+const isAskingAboutCelestia = (message) => {
+    const lowerMsg = message.toLowerCase();
+
+    // Check for questions about identity or how Celestia is doing
+    const identityPatterns = [
+        'who are you',
+        'what are you',
+        'tell me about yourself',
+        'describe yourself',
+        'your name',
+        'introduce yourself'
+    ];
+
+    const statusPatterns = [
+        'how are you',
+        'how are you doing',
+        'how do you feel',
+        'how is it going',
+        'how\'s it going',
+        'how are things'
+    ];
+
+    // Check if any pattern matches
+    return identityPatterns.some(pattern => lowerMsg.includes(pattern)) ||
+           statusPatterns.some(pattern => lowerMsg.includes(pattern));
+};
+
+// Custom response for when someone asks about Celestia
+const getCelestiaResponse = () => {
+    return "Hi there! My name is Celestia. I'm your friendly AI assistant, and I'm doing wonderfully today! I'm here to help you with any questions or tasks you might have. How can I assist you today?";
+};
+
 // function to create message elements
 const createMsgElement = (content, ...classes) =>{
     const div = document.createElement("div");
@@ -37,7 +70,7 @@ const typingEffect = (text, textElement, botMsgDiv) =>{
             clearInterval(typingInterval);
             botMsgDiv.classList.remove("loading");
             document.body.classList.remove("bot-responding");
-            
+
         }
     }, 40);
 }
@@ -66,7 +99,7 @@ const generateResponse = async(botMsgDiv) => {
         const responseText = data.candidates[0].content.parts[0].text.replace(/\*\*([^*]+)\*\*/g, "$1").trim();
         typingEffect(responseText,textElement, botMsgDiv);
         chatHistory.push({role:"model", parts:[{text:responseText}]});
-        
+
     } catch(error){
         textElement.style.color = "#d62939";
         textElement.textContent = error.name === "AbortError" ? "Response generation stopped." : error.message;
@@ -93,11 +126,34 @@ const handleFormSubmit = (e) => {
 
     setTimeout(()=>{
         // generate bot message HTML and add in the chats container after 600ms
-    const botMsgHTML = `<img src="celestia.png" class="avatar"><p class= "message-text">Just a sec...</p>`;
-    const botMsgDiv = createMsgElement(botMsgHTML, "bot-message", "loading");
-    chatsContainer.appendChild(botMsgDiv);
-    scrollToBottom();
-    generateResponse(botMsgDiv);
+        const botMsgHTML = `<img src="celestia.png" class="avatar"><p class= "message-text">Just a sec...</p>`;
+        const botMsgDiv = createMsgElement(botMsgHTML, "bot-message", "loading");
+        chatsContainer.appendChild(botMsgDiv);
+        scrollToBottom();
+
+        // Check if the message is asking about Celestia
+        if (isAskingAboutCelestia(userMessage)) {
+            // Use custom response instead of API call
+            const textElement = botMsgDiv.querySelector(".message-text");
+            const responseText = getCelestiaResponse();
+
+            // Add messages to chat history
+            chatHistory.push({
+                role: "user",
+                parts: [{text: userMessage}]
+            });
+
+            chatHistory.push({
+                role: "model",
+                parts: [{text: responseText}]
+            });
+
+            // Display with typing effect
+            typingEffect(responseText, textElement, botMsgDiv);
+        } else {
+            // Use API for other messages
+            generateResponse(botMsgDiv);
+        }
     }, 600);
 }
 
@@ -132,7 +188,11 @@ promptForm.addEventListener("submit", handleFormSubmit);
 
 //delete all chats
 document.querySelector("#delete-chats-btn").addEventListener("click",()=>{
-    chatHistory.length = 0;
-    chatsContainer.innerHTML = "";
-    document.body.classList.add("bot-responding","chats-active");
+    // Only perform delete if there are chats (if chats-active class is present)
+    if (document.body.classList.contains("chats-active") && chatsContainer.innerHTML.trim() !== "") {
+        chatHistory.length = 0;
+        chatsContainer.innerHTML = "";
+        document.body.classList.remove("bot-responding");
+        document.body.classList.remove("chats-active"); // Remove chats-active to show initial page
+    }
 })
