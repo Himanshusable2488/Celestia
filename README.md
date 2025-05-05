@@ -14,12 +14,12 @@
 
 ## 📁 Project Structure
 
-celestia-chatbot/
-├── index.html # Main HTML structure
-├── style.css # Custom styles with theme support
-├── script.js # Core JS logic, API call, UI handling
-├── celestia.png # Bot avatar icon
-└── README.md # Project documentation
+celestia-chatbot/ <br>
+├── index.html # Main HTML structure <br>
+├── style.css # Custom styles with theme support <br>
+├── script.js # Core JS logic, API call, UI handling <br>
+├── celestia.png # Bot avatar icon <br>
+└── README.md # Project documentation <br>
 
 
 ## 🛠️ Technologies Used
